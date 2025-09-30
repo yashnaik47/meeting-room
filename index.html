@@ -88,13 +88,12 @@
 
 <script>
 (() => {
-  const ROOMS = ["Innovation", "Transformation", "Huddle Room"];
+  const ROOMS = ["Innovation", "Transformation", "Huddle Room", "Boardroom", "Lounge Area"];
   const START_HOUR = 9; // 9:00 AM
   const END_HOUR = 19;  // 7:00 PM
   const INTERVAL_MIN = 30; // 30-minute slots
   const STORAGE_KEY = "meetingRoomBookings_v2";
 
-  // generate slot labels and internal times
   function generateSlots(startHour, endHour, intervalMin) {
     const slots = [];
     const startMin = startHour * 60;
@@ -120,15 +119,13 @@
     return `${displayHour}:${String(mm).padStart(2, "0")} ${period}`;
   }
 
-  const SLOTS = generateSlots(START_HOUR, END_HOUR, INTERVAL_MIN); // array of {label, startMin, endMin}
+  const SLOTS = generateSlots(START_HOUR, END_HOUR, INTERVAL_MIN);
 
-  // load or initialize bookings structure: { roomName: [null, "Alice", null, ...] }
   function loadBookings() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return initializeBookings();
     try {
       const parsed = JSON.parse(raw);
-      // ensure rooms and slot lengths match current config
       ROOMS.forEach(room => {
         if (!Array.isArray(parsed[room]) || parsed[room].length !== SLOTS.length) {
           parsed[room] = Array(SLOTS.length).fill(null);
@@ -165,7 +162,6 @@
       header.className = "roomHeader";
       const title = document.createElement("h2"); title.textContent = room;
       const info = document.createElement("div"); info.className = "slotMeta";
-      // show simple summary
       const takenCount = bookings[room].filter(x => !!x).length;
       info.textContent = `${takenCount} / ${SLOTS.length} booked`;
       header.appendChild(title);
@@ -236,7 +232,6 @@
       render();
       return;
     }
-    // confirm
     const confirmMsg = `Book "${room}"\n${SLOTS[slotIndex].label}\nfor: ${user}?`;
     if (!confirm(confirmMsg)) return;
     bookings[room][slotIndex] = user;
@@ -257,19 +252,14 @@
     render();
   }
 
-  // expose a small helper to clear all bookings (for testing) — not shown in UI
   window.__clearAllBookings = function(){
     if (!confirm("Clear ALL bookings?")) return;
     bookings = initializeBookings();
     render();
   };
 
-  // initial render
   render();
-
-  // re-render when name changes so cancel buttons appear/disappear appropriately
   userInput.addEventListener("input", () => { render(); });
-
 })();
 </script>
 </body>
