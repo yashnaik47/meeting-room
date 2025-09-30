@@ -1,161 +1,276 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Meeting Room Booking</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Meeting Room Booking — 30-min Slots</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6fb;
-      margin: 0;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+    :root{
+      --bg:#f4f7fb;
+      --card:#ffffff;
+      --accent:#0b69ff;
+      --ok:#16893a;
+      --danger:#b42318;
+      --muted:#6b7280;
+      --radius:12px;
     }
-    h1 {
-      margin-bottom: 20px;
-      color: #333;
+    *{box-sizing:border-box}
+    body{
+      font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      margin:0;padding:28px;background:linear-gradient(180deg,var(--bg),#eef3fb); color:#0f1724;
+      display:flex;flex-direction:column;align-items:center;gap:18px;
     }
-    .input-box {
-      margin-bottom: 20px;
+
+    .top {
+      width:100%;max-width:1100px;display:flex;gap:12px;align-items:center;justify-content:space-between;
     }
-    input {
-      padding: 8px 10px;
-      font-size: 14px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
+    h1{margin:0;font-size:20px}
+    .user {
+      display:flex;gap:8px;align-items:center;
     }
-    .rooms {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
-      width: 100%;
-      max-width: 1000px;
+    .user input{
+      padding:10px 12px;border-radius:10px;border:1px solid #d1d5db;width:220px;
+      font-size:14px;
     }
-    .room {
-      background: #fff;
-      border-radius: 12px;
-      padding: 15px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
+    .legend{font-size:13px;color:var(--muted)}
+
+    .roomsWrap{
+      width:100%;max-width:1100px;
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+      gap:18px;
     }
-    .room h2 {
-      margin: 0 0 10px;
-      text-align: center;
+
+    .roomCard{
+      background:var(--card);border-radius:var(--radius);padding:16px;
+      box-shadow:0 8px 20px rgba(15,23,42,0.06);display:flex;flex-direction:column;gap:10px;
     }
-    .slots {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      justify-content: center;
+    .roomHeader{display:flex;justify-content:space-between;align-items:center;gap:8px}
+    .roomHeader h2{margin:0;font-size:16px}
+    .slots{display:flex;flex-direction:column;gap:8px;max-height:520px;overflow:auto;padding-right:6px}
+    .slotRow{
+      display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:10px;
+      border:1px solid rgba(15,23,42,0.04);background:linear-gradient(180deg, #fff, #fbfdff);
     }
-    .slot {
-      flex: 0 0 calc(50% - 6px);
-      padding: 6px;
-      text-align: center;
-      border-radius: 6px;
-      font-size: 13px;
-      cursor: pointer;
-      border: 1px solid #ccc;
-      transition: 0.2s;
-    }
-    .slot.available {
-      background: #e6ffed;
-      color: #137333;
-    }
-    .slot.available:hover {
-      background: #c3f5d5;
-    }
-    .slot.booked {
-      background: #ffe6e6;
-      color: #a00000;
-      cursor: not-allowed;
+    .slotLabel{font-size:14px;color:#0f1724}
+    .slotMeta{font-size:13px;color:var(--muted);margin-left:10px}
+
+    .actions{display:flex;gap:8px;align-items:center}
+    button{cursor:pointer;border:0;padding:8px 10px;border-radius:8px;font-weight:600}
+    .btn-book{background:var(--accent);color:white}
+    .btn-cancel{background:transparent;border:1px solid rgba(180,35,24,0.12);color:var(--danger)}
+    .btn-disabled{background:#f3f4f6;color:var(--muted);cursor:not-allowed;border:1px solid rgba(15,23,42,0.04)}
+    .status-available{color:var(--ok);font-weight:700}
+    .status-booked{color:var(--danger);font-weight:700}
+
+    footer{font-size:13px;color:var(--muted);margin-top:6px}
+    @media (max-width:640px){
+      .user input{width:140px}
     }
   </style>
 </head>
 <body>
-  <h1>Office Meeting Room Booking</h1>
 
-  <div class="input-box">
-    <input type="text" id="userName" placeholder="Enter your name" />
+  <div class="top">
+    <div>
+      <h1>Office Meeting Room Booking</h1>
+      <div class="legend">Slots: 30 minutes — Day: 9:00 AM to 7:00 PM</div>
+    </div>
+
+    <div class="user">
+      <input id="userName" placeholder="Enter your name (required to book)" />
+    </div>
   </div>
 
-  <div class="rooms" id="roomsContainer"></div>
+  <div class="roomsWrap" id="roomsContainer"></div>
 
-  <script>
-    const rooms = ["Innovation", "Transformation", "Huddle Room"];
-    const startHour = 9, endHour = 19; // 9 AM to 7 PM
-    const slotsPerHour = 2; // 30-min slots
+  <footer>Tip: You can cancel only the slots you booked (to prevent accidental frees).</footer>
+
+<script>
+(() => {
+  const ROOMS = ["Innovation", "Transformation", "Huddle Room"];
+  const START_HOUR = 9; // 9:00 AM
+  const END_HOUR = 19;  // 7:00 PM
+  const INTERVAL_MIN = 30; // 30-minute slots
+  const STORAGE_KEY = "meetingRoomBookings_v2";
+
+  // generate slot labels and internal times
+  function generateSlots(startHour, endHour, intervalMin) {
     const slots = [];
-
-    // Generate time slots
-    for (let h = startHour; h < endHour; h++) {
-      slots.push(`${formatTime(h)}:00 - ${formatTime(h)}:30`);
-      slots.push(`${formatTime(h)}:30 - ${formatTime(h+1)}:00`);
-    }
-
-    function formatTime(hour) {
-      const suffix = hour >= 12 ? "PM" : "AM";
-      let display = hour % 12;
-      if (display === 0) display = 12;
-      return display + " " + suffix;
-    }
-
-    // Load saved bookings
-    let bookings = JSON.parse(localStorage.getItem("roomBookings")) || {};
-    rooms.forEach(room => {
-      if (!bookings[room]) {
-        bookings[room] = {};
-        slots.forEach(slot => bookings[room][slot] = null);
-      }
-    });
-
-    const container = document.getElementById("roomsContainer");
-
-    function renderRooms() {
-      container.innerHTML = "";
-      rooms.forEach(room => {
-        const card = document.createElement("div");
-        card.className = "room";
-
-        const title = document.createElement("h2");
-        title.textContent = room;
-
-        const slotContainer = document.createElement("div");
-        slotContainer.className = "slots";
-
-        slots.forEach(slot => {
-          const slotDiv = document.createElement("div");
-          slotDiv.className = "slot " + (bookings[room][slot] ? "booked" : "available");
-          slotDiv.textContent = bookings[room][slot] ? `${slot} — Booked by ${bookings[room][slot]}` : slot;
-
-          if (!bookings[room][slot]) {
-            slotDiv.onclick = () => {
-              const user = document.getElementById("userName").value.trim();
-              if (!user) {
-                alert("Please enter your name before booking!");
-                return;
-              }
-              bookings[room][slot] = user;
-              localStorage.setItem("roomBookings", JSON.stringify(bookings));
-              renderRooms();
-            };
-          }
-
-          slotContainer.appendChild(slotDiv);
-        });
-
-        card.appendChild(title);
-        card.appendChild(slotContainer);
-        container.appendChild(card);
+    const startMin = startHour * 60;
+    const endMin = endHour * 60;
+    for (let t = startMin; t < endMin; t += intervalMin) {
+      const start = t;
+      const end = t + intervalMin;
+      slots.push({
+        startMin: start,
+        endMin: end,
+        label: `${formatTime(start)} - ${formatTime(end)}`
       });
     }
+    return slots;
+  }
 
-    renderRooms();
-  </script>
+  function formatTime(totalMinutes) {
+    const hh = Math.floor(totalMinutes / 60);
+    const mm = totalMinutes % 60;
+    const period = hh >= 12 ? "PM" : "AM";
+    let displayHour = hh % 12;
+    if (displayHour === 0) displayHour = 12;
+    return `${displayHour}:${String(mm).padStart(2, "0")} ${period}`;
+  }
+
+  const SLOTS = generateSlots(START_HOUR, END_HOUR, INTERVAL_MIN); // array of {label, startMin, endMin}
+
+  // load or initialize bookings structure: { roomName: [null, "Alice", null, ...] }
+  function loadBookings() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return initializeBookings();
+    try {
+      const parsed = JSON.parse(raw);
+      // ensure rooms and slot lengths match current config
+      ROOMS.forEach(room => {
+        if (!Array.isArray(parsed[room]) || parsed[room].length !== SLOTS.length) {
+          parsed[room] = Array(SLOTS.length).fill(null);
+        }
+      });
+      return parsed;
+    } catch (e) {
+      return initializeBookings();
+    }
+  }
+
+  function initializeBookings() {
+    const obj = {};
+    ROOMS.forEach(r => obj[r] = Array(SLOTS.length).fill(null));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
+    return obj;
+  }
+
+  let bookings = loadBookings();
+  const container = document.getElementById("roomsContainer");
+  const userInput = document.getElementById("userName");
+
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
+  }
+
+  function render() {
+    container.innerHTML = "";
+    ROOMS.forEach(room => {
+      const card = document.createElement("div");
+      card.className = "roomCard";
+
+      const header = document.createElement("div");
+      header.className = "roomHeader";
+      const title = document.createElement("h2"); title.textContent = room;
+      const info = document.createElement("div"); info.className = "slotMeta";
+      // show simple summary
+      const takenCount = bookings[room].filter(x => !!x).length;
+      info.textContent = `${takenCount} / ${SLOTS.length} booked`;
+      header.appendChild(title);
+      header.appendChild(info);
+
+      const slotsWrap = document.createElement("div");
+      slotsWrap.className = "slots";
+
+      bookings[room].forEach((bookedBy, slotIndex) => {
+        const slot = SLOTS[slotIndex];
+        const row = document.createElement("div");
+        row.className = "slotRow";
+
+        const left = document.createElement("div");
+        left.style.display = "flex"; left.style.flexDirection = "column";
+        const label = document.createElement("div"); label.className = "slotLabel";
+        label.textContent = slot.label;
+        const meta = document.createElement("div"); meta.className = "slotMeta";
+        if (!bookedBy) meta.textContent = "Available";
+        else meta.textContent = `Booked by ${bookedBy}`;
+
+        left.appendChild(label); left.appendChild(meta);
+
+        const actions = document.createElement("div"); actions.className = "actions";
+        if (!bookedBy) {
+          const btn = document.createElement("button");
+          btn.className = "btn-book";
+          btn.textContent = "Book";
+          btn.onclick = () => attemptBook(room, slotIndex);
+          actions.appendChild(btn);
+        } else {
+          const currentUser = userInput.value.trim();
+          if (currentUser && currentUser === bookedBy) {
+            const btn = document.createElement("button");
+            btn.className = "btn-cancel";
+            btn.textContent = "Cancel";
+            btn.onclick = () => attemptCancel(room, slotIndex);
+            actions.appendChild(btn);
+          } else {
+            const btn = document.createElement("button");
+            btn.className = "btn-disabled";
+            btn.textContent = "Booked";
+            btn.disabled = true;
+            actions.appendChild(btn);
+          }
+        }
+
+        row.appendChild(left);
+        row.appendChild(actions);
+        slotsWrap.appendChild(row);
+      });
+
+      card.appendChild(header);
+      card.appendChild(slotsWrap);
+      container.appendChild(card);
+    });
+  }
+
+  function attemptBook(room, slotIndex) {
+    const user = userInput.value.trim();
+    if (!user) {
+      alert("Please enter your name before booking a slot.");
+      userInput.focus();
+      return;
+    }
+    if (bookings[room][slotIndex]) {
+      alert("Sorry, this slot was just taken.");
+      render();
+      return;
+    }
+    // confirm
+    const confirmMsg = `Book "${room}"\n${SLOTS[slotIndex].label}\nfor: ${user}?`;
+    if (!confirm(confirmMsg)) return;
+    bookings[room][slotIndex] = user;
+    save();
+    render();
+  }
+
+  function attemptCancel(room, slotIndex) {
+    const user = userInput.value.trim();
+    if (!user) { alert("Enter your name to cancel your booking."); return; }
+    if (bookings[room][slotIndex] !== user) {
+      alert("You can only cancel slots you have booked (using the same name).");
+      return;
+    }
+    if (!confirm(`Cancel your booking for "${room}"\n${SLOTS[slotIndex].label}?`)) return;
+    bookings[room][slotIndex] = null;
+    save();
+    render();
+  }
+
+  // expose a small helper to clear all bookings (for testing) — not shown in UI
+  window.__clearAllBookings = function(){
+    if (!confirm("Clear ALL bookings?")) return;
+    bookings = initializeBookings();
+    render();
+  };
+
+  // initial render
+  render();
+
+  // re-render when name changes so cancel buttons appear/disappear appropriately
+  userInput.addEventListener("input", () => { render(); });
+
+})();
+</script>
 </body>
 </html>
