@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Meeting Room Booking</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6fb;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+    .input-box {
+      margin-bottom: 20px;
+    }
+    input {
+      padding: 8px 10px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    .rooms {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      width: 100%;
+      max-width: 1000px;
+    }
+    .room {
+      background: #fff;
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .room h2 {
+      margin: 0 0 10px;
+      text-align: center;
+    }
+    .slots {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+    }
+    .slot {
+      flex: 0 0 calc(50% - 6px);
+      padding: 6px;
+      text-align: center;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      border: 1px solid #ccc;
+      transition: 0.2s;
+    }
+    .slot.available {
+      background: #e6ffed;
+      color: #137333;
+    }
+    .slot.available:hover {
+      background: #c3f5d5;
+    }
+    .slot.booked {
+      background: #ffe6e6;
+      color: #a00000;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <h1>Office Meeting Room Booking</h1>
+
+  <div class="input-box">
+    <input type="text" id="userName" placeholder="Enter your name" />
+  </div>
+
+  <div class="rooms" id="roomsContainer"></div>
+
+  <script>
+    const rooms = ["Innovation", "Transformation", "Huddle Room"];
+    const startHour = 9, endHour = 19; // 9 AM to 7 PM
+    const slotsPerHour = 2; // 30-min slots
+    const slots = [];
+
+    // Generate time slots
+    for (let h = startHour; h < endHour; h++) {
+      slots.push(`${formatTime(h)}:00 - ${formatTime(h)}:30`);
+      slots.push(`${formatTime(h)}:30 - ${formatTime(h+1)}:00`);
+    }
+
+    function formatTime(hour) {
+      const suffix = hour >= 12 ? "PM" : "AM";
+      let display = hour % 12;
+      if (display === 0) display = 12;
+      return display + " " + suffix;
+    }
+
+    // Load saved bookings
+    let bookings = JSON.parse(localStorage.getItem("roomBookings")) || {};
+    rooms.forEach(room => {
+      if (!bookings[room]) {
+        bookings[room] = {};
+        slots.forEach(slot => bookings[room][slot] = null);
+      }
+    });
+
+    const container = document.getElementById("roomsContainer");
+
+    function renderRooms() {
+      container.innerHTML = "";
+      rooms.forEach(room => {
+        const card = document.createElement("div");
+        card.className = "room";
+
+        const title = document.createElement("h2");
+        title.textContent = room;
+
+        const slotContainer = document.createElement("div");
+        slotContainer.className = "slots";
+
+        slots.forEach(slot => {
+          const slotDiv = document.createElement("div");
+          slotDiv.className = "slot " + (bookings[room][slot] ? "booked" : "available");
+          slotDiv.textContent = bookings[room][slot] ? `${slot} — Booked by ${bookings[room][slot]}` : slot;
+
+          if (!bookings[room][slot]) {
+            slotDiv.onclick = () => {
+              const user = document.getElementById("userName").value.trim();
+              if (!user) {
+                alert("Please enter your name before booking!");
+                return;
+              }
+              bookings[room][slot] = user;
+              localStorage.setItem("roomBookings", JSON.stringify(bookings));
+              renderRooms();
+            };
+          }
+
+          slotContainer.appendChild(slotDiv);
+        });
+
+        card.appendChild(title);
+        card.appendChild(slotContainer);
+        container.appendChild(card);
+      });
+    }
+
+    renderRooms();
+  </script>
+</body>
+</html>
