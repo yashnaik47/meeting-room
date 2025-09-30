@@ -32,6 +32,12 @@
       padding:10px 12px;border-radius:10px;border:1px solid #d1d5db;width:220px;
       font-size:14px;
     }
+    .btn-clear {
+      padding:10px 14px;border:none;border-radius:8px;
+      background:#e11d48;color:white;font-weight:600;cursor:pointer;
+    }
+    .btn-clear:hover{background:#b91c1c}
+
     .legend{font-size:13px;color:var(--muted)}
 
     .roomsWrap{
@@ -60,8 +66,6 @@
     .btn-book{background:var(--accent);color:white}
     .btn-cancel{background:transparent;border:1px solid rgba(180,35,24,0.12);color:var(--danger)}
     .btn-disabled{background:#f3f4f6;color:var(--muted);cursor:not-allowed;border:1px solid rgba(15,23,42,0.04)}
-    .status-available{color:var(--ok);font-weight:700}
-    .status-booked{color:var(--danger);font-weight:700}
 
     footer{font-size:13px;color:var(--muted);margin-top:6px}
     @media (max-width:640px){
@@ -79,6 +83,7 @@
 
     <div class="user">
       <input id="userName" placeholder="Enter your name (required to book)" />
+      <button class="btn-clear" id="clearAll">Clear All Bookings</button>
     </div>
   </div>
 
@@ -89,9 +94,9 @@
 <script>
 (() => {
   const ROOMS = ["Innovation", "Transformation", "Huddle Room", "Boardroom", "Lounge Area"];
-  const START_HOUR = 9; // 9:00 AM
-  const END_HOUR = 19;  // 7:00 PM
-  const INTERVAL_MIN = 30; // 30-minute slots
+  const START_HOUR = 9; 
+  const END_HOUR = 19;  
+  const INTERVAL_MIN = 30; 
   const STORAGE_KEY = "meetingRoomBookings_v2";
 
   function generateSlots(startHour, endHour, intervalMin) {
@@ -147,6 +152,7 @@
   let bookings = loadBookings();
   const container = document.getElementById("roomsContainer");
   const userInput = document.getElementById("userName");
+  const clearBtn = document.getElementById("clearAll");
 
   function save() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
@@ -252,11 +258,12 @@
     render();
   }
 
-  window.__clearAllBookings = function(){
-    if (!confirm("Clear ALL bookings?")) return;
-    bookings = initializeBookings();
-    render();
-  };
+  clearBtn.addEventListener("click", () => {
+    if (confirm("Are you sure you want to clear ALL bookings?")) {
+      bookings = initializeBookings();
+      render();
+    }
+  });
 
   render();
   userInput.addEventListener("input", () => { render(); });
